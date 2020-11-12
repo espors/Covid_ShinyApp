@@ -44,36 +44,41 @@ ui <- fluidPage(
     # Application title
     titlePanel("Covid-19 in the United States"),
 
-    # Sidebar with a slider input for number of bins 
+    # Sidebar 
     sidebarLayout(
         
         
         sidebarPanel(
             
+          #allow user to select region 
             selectInput("select_region", label = h3("Select US Region"), 
                         choices = list("Northeast" = 1, "Midwest" = 2, "South" = 3, "West" = 4), 
                         selected = 1),
-            
+          
+          #allow user to select cases or deaths  
             selectInput("select_type", label = h3("Select for Number of Cases or Deaths"), 
                         choices = list("Cases" = "Covid Cases", "Deaths" = "Covid Deaths")),
         ),
 
-        # Show a plot of the generated distribution
+        # show time series plot 
         mainPanel(
            plotlyOutput("timeSeries"),
         )
     )
 )
 
-# Define server logic required to draw a histogram
+# Define server logic 
 server <- function(input, output) {
+  
     output$timeSeries <- renderPlotly({
+      
+        #filter on region selected and dates before march 3 
         covid_region <- covid %>%
             filter(REGION == input$select_region) %>%
             filter(submission_date >= "2020-03-01")
         
         
-        
+        #graph for cases 
         plot <-ggplot(covid_region, aes(x = submission_date, group = state)) + 
             geom_line(aes(y = case5, color = state), size = 1) + 
             ylab("Rolling 5 Day Average Per 100,000") + 
@@ -82,6 +87,7 @@ server <- function(input, output) {
             scale_x_date(date_breaks = "1 month", date_labels =  "%b %Y") +
             theme_minimal() 
         
+        #graph for deaths 
         plot2 <-ggplot(covid_region, aes(x = submission_date, group = state)) + 
             geom_line(aes(y = death5, color = state), size = 1) + 
             ylab("Rolling 5 Day Average Per 100,000") + 
@@ -90,6 +96,7 @@ server <- function(input, output) {
             theme(axis.text.x = element_text(angle = 90)) +
             theme_minimal() 
         
+        #display plot based on user selection 
         if(input$select_type == "Covid Cases") {
             plot.ly <- ggplotly(plot)
         }
